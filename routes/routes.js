@@ -15,8 +15,10 @@ router.post("/register", async (req, res) => {
 
     const name = req.body.name
     const email = req.body.email
+    const number = req.body.number
     const password = req.body.password
     const token = uuidv4();
+    const role = req.body.role
 
     const errors = [];
 
@@ -25,6 +27,12 @@ router.post("/register", async (req, res) => {
     }
     if (!email) {
         errors.push("Please enter an email");
+    }
+    if (!number) {
+        errors.push("Please enter a password");
+    }
+    if(number.length !== 10){
+        errors.push("Number should be 10 digits long");
     }
     if (!password) {
         errors.push("Please enter a password");
@@ -44,8 +52,10 @@ router.post("/register", async (req, res) => {
             const user = new User({
                 name,
                 email,
+                number,
                 hashedPassword,
                 token,
+                role,
             });
             const savedUser = await user.save();
 
@@ -63,13 +73,15 @@ router.post("/register", async (req, res) => {
         }
     }
 });
-
 // ends
 
 
-router.post("/login", async (req, res) => {
+
+// login api
+router.get("/login", async (req, res) => {
     const email = req.body.email;
     const password = req.body.password;
+    const sessionStorage = req.session.userInfo;
 
     const errors = [];
 
@@ -79,7 +91,13 @@ router.post("/login", async (req, res) => {
     if (!password) {
         errors.push("Please provide the password");
     }
-    
+    if(!validator.isEmail(email)){
+        errors.push("Please enter a valid email");
+    }
+    if(sessionStorage){
+        errors.push("You are already logged in");
+    }
+
     if (errors.length > 0) {
         res.status(400).json({ errors });
         return;
@@ -88,22 +106,55 @@ router.post("/login", async (req, res) => {
 
     if (!user) {
         errors.push("This email is not registered");
-        res.status(400).json({errors});
+        res.status(400).json({ errors });
         return;
     } else {
         const checkPassword = await bcrypt.compare(password, user.hashedPassword);
 
         if (!checkPassword) {
             errors.push("Wrong password");
+            res.status(400).json({ errors });
+            return;
+        }else if(user.verification_status === 'unverified'){
+            errors.push("You still need to be verified");
             res.status(400).json({errors});
             return;
-        } else {
-            const username = user.name;
-            res.status(201).send({ username, message: "Logged in" });
+        }
+        else {
+            const userData = user;
+            req.session.userInfo = {userToken: user.token, userEmail: user.email};
+            res.status(201).send({ userData, message: "Logged in" });
         }
     }
-
 });
+// ends
+
+
+
+// logout api
+router.get("/logout", (req,res)=>{
+    req.session.destroy((err)=>{
+        if(err){
+            res.status(401).json({err})
+        }else{
+            res.status(200).send({message:"Successfully logged out"});
+        }
+    })
+})
+// ends
+
+
+// api to print sessions
+router.get("/getsession", (req, res)=>{
+    const user = req.session.userInfo;
+    if(user){
+        console.log(user);
+    }else{
+        res.status(200).json({message:"No session"});
+    }
+})
+// ends here
+
 
 
 

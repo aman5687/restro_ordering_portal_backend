@@ -3,6 +3,7 @@ const express = require('express')
 const session = require("express-session");
 const mongoose = require("mongoose");
 const app = express()
+const cors = require("cors");
 const port = process.env.PORT || 4000
 
 app.listen(port, () => console.log(`Example app listening on port http://localhost:${port}`))
@@ -23,11 +24,16 @@ app.use(
         secret: process.env.SECRET_KEY,
         saveUninitialized: true,
         resave: false,
+        cookie:{
+            secure: false,
+            maxAge: 24*60*60*1000,
+        }
     })
 );
 
 
 app.use(express.static('uploads'));
+app.use(cors());
 
 // to handle the message session
 app.use((req, res, next)=>{
