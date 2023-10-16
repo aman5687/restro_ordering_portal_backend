@@ -22,15 +22,6 @@ const userSchema = new mongoose.Schema({
         type:String,
         required:true,
     },
-    role:{
-        type:String,
-        required:true,
-    },
-    verification_status:{
-        type:String,
-        required:true,
-        default:"unverified",
-    },
 });
 
 module.exports = mongoose.model('User', userSchema);

@@ -18,7 +18,6 @@ router.post("/register", async (req, res) => {
     const number = req.body.number
     const password = req.body.password
     const token = uuidv4();
-    const role = req.body.role
 
     const errors = [];
 
@@ -55,7 +54,6 @@ router.post("/register", async (req, res) => {
                 number,
                 hashedPassword,
                 token,
-                role,
             });
             const savedUser = await user.save();
 
@@ -68,6 +66,7 @@ router.post("/register", async (req, res) => {
             if (error.code === 11000 && error.keyPattern && error.keyPattern.email === 1) {
                 res.status(409).json({ message: "Email is already in use, please enter a unique email" }); // Use 409 Conflict
             } else {
+                console.error(error);
                 res.status(500).json({ message: "Error in catch" }); // Use 500 Internal Server Error
             }
         }
@@ -114,10 +113,6 @@ router.get("/login", async (req, res) => {
         if (!checkPassword) {
             errors.push("Wrong password");
             res.status(400).json({ errors });
-            return;
-        }else if(user.verification_status === 'unverified'){
-            errors.push("You still need to be verified");
-            res.status(400).json({errors});
             return;
         }
         else {
