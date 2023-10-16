@@ -17,6 +17,7 @@ router.post("/register", async (req, res) => {
     const email = req.body.email
     const number = req.body.number
     const password = req.body.password
+    const confPassword = req.body.confPassword
     const token = uuidv4();
 
     const errors = [];
@@ -30,11 +31,17 @@ router.post("/register", async (req, res) => {
     if (!number) {
         errors.push("Please enter a password");
     }
+    if (!confPassword) {
+        errors.push("Please enter a password");
+    }
     if(number.length !== 10){
         errors.push("Number should be 10 digits long");
     }
     if (!password) {
         errors.push("Please enter a password");
+    }
+    if(password !== confPassword){
+        errors.push("Password and Confirm Password should be same");
     }
     if (!validator.isEmail(email)) {
         errors.push("Please enter a valid email");
