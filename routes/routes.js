@@ -17,7 +17,7 @@ router.post("/register", async (req, res) => {
     const email = req.body.email
     const number = req.body.number
     const password = req.body.password
-    const confPassword = req.body.confPassword
+    const role = req.body.role
     const token = uuidv4();
 
     const errors = [];
@@ -31,17 +31,14 @@ router.post("/register", async (req, res) => {
     if (!number) {
         errors.push("Please enter a password");
     }
-    if (!confPassword) {
-        errors.push("Please enter a password");
-    }
     if(number.length !== 10){
         errors.push("Number should be 10 digits long");
     }
     if (!password) {
         errors.push("Please enter a password");
     }
-    if(password !== confPassword){
-        errors.push("Password and Confirm Password should be same");
+    if(!role){
+        errors.push("Please enter your role");
     }
     if (!validator.isEmail(email)) {
         errors.push("Please enter a valid email");
@@ -60,6 +57,7 @@ router.post("/register", async (req, res) => {
                 email,
                 number,
                 hashedPassword,
+                role,
                 token,
             });
             const savedUser = await user.save();
@@ -144,6 +142,7 @@ router.get("/logout", (req,res)=>{
     })
 })
 // ends
+
 
 
 // api to print sessions
