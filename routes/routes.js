@@ -240,8 +240,36 @@ router.post("/addRestroInfo", upload.single("restroImage"), async (req, res)=>{
 // ends here
 
 
+// api to fetch all restros
+
+router.get("/allRestros", (req, res)=>{
+    Restro.find()
+    .exec()
+    .then((data)=>{
+        res.status(200).json({data});
+    })
+    .catch((error)=>{
+        res.status(401).json({error});
+    })
+})
+// ends here
 
 
+// api to fetch restro Info
+
+router.get("/restroByInfo/:token", async (req, res)=>{
+    const token = req.params.token;
+
+    const restroInfo = await Restro.find({restroToken:token})
+
+    if(restroInfo){
+        res.status(200).json({restroInfo});
+    }else{
+        res.status(401).json({message:"No restro"});
+    }
+})
+
+// ends here
 
 
 
