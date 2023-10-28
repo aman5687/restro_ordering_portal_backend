@@ -6,7 +6,26 @@ const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const validator = require("validator");
 const bcrypt = require("bcryptjs");
+const cloudinary = require("cloudinary").v2;
+const Restro = require("../models/restroInfo");
 
+const storage = multer.diskStorage({
+    filename: function(req, file, cb){
+        cb(null, file.originalname)
+    }
+});
+
+const upload = multer({storage:storage});
+
+// cloudinary configs
+
+cloudinary.config({
+    cloud_name: 'djrh8oflc',
+    api_key: '544113442678141',
+    api_secret: 'G6AKEYGFz2eiEcVHXg-4myu5cXg'
+});
+
+// ends here
 
 
 
@@ -161,6 +180,64 @@ router.get("/getsession", (req, res) => {
 })
 // ends here
 
+// api to add restro info
+router.post("/addRestroInfo", upload.single("restroImage"), async (req, res)=>{
+    try {
+        
+        const restroName = req.body.restroName;
+        const restroAddress = req.body.restroAddress;
+        const restroTableCount = req.body.restroTableCount;
+        const restroImage = req.file.path;
+        const restroToken = uuidv4();
+    
+        const errors = [];
+    
+        if(!restroName){
+            errors.push("Please provide Restaurant Name");
+            return res.status(401).json({errors});
+        }
+        if(!restroAddress){
+            errors.push("Please provide Restaurant Address");
+            return res.status(401).json({errors});
+        }
+        if(!restroTableCount){
+            errors.push("Please provide Restaurant Table Count");
+            return res.status(401).json({errors});
+        }
+        if(!restroImage){
+            errors.push("Please provide Restaurant Image");
+            return res.status(401).json({errors});
+        }
+    
+        const cloudinaryImageResult = await cloudinary.uploader.upload(restroImage, {folder:"restro_image"}, function(err, result){
+            if(err){
+                res.status(401).json({err});
+            }
+        });
+    
+        imageURL = cloudinaryImageResult.secure_url;
+        const restroSave = new Restro({
+            restroName,
+            restroAddress,
+            restroTableCount,
+            restroImage:imageURL,
+            restroToken
+        })
+    
+        const saveRestro = await restroSave.save();
+    
+        if(saveRestro){
+            res.status(200).json({message:"Restro information has been saved"});
+        }else{
+            res.status(400).json({message:"Restro Information has not been saved"});
+        }
+    } catch (error) {
+        res.status(401).json({error});
+    }
+})
+
+
+// ends here
 
 
 
