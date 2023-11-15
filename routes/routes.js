@@ -261,10 +261,13 @@ router.get("/allRestros", (req, res)=>{
 router.get("/restroByInfo/:token", async (req, res)=>{
     const token = req.params.token;
 
-    const restroInfo = await Restro.find({restroToken:token})
+    const restroAllTables = await Restro.find({restroToken:token})
+    const restroBookedTables = await Table.find({restroToken:token})
 
-    if(restroInfo){
-        res.status(200).json({restroInfo});
+    const bookedTables = restroBookedTables.map(table => table.tableNumber);
+
+    if(restroAllTables && restroBookedTables){
+        res.status(200).json({restroAllTables, bookedTables});
     }else{
         res.status(401).json({message:"No restro"});
     }
@@ -300,15 +303,82 @@ router.post("/bookTable/:token/:tableNumber", async (req, res)=>{
         res.status(401).json({error});
     };
 
-
-
-
-
 })
 
 // ends here
 
 
+// api to show all tables booked by user
 
+router.post("/allTablesOfUser", async (req, res)=>{
+    try {
+        const userToken = req.body.userToken;
+        const userBookings = await Table.find({bookedBy: userToken});
+        const uniqueRestroTokens = [...new Set(userBookings.map(bookings => bookings.restroToken))];
+        const restroNames = await Promise.all(uniqueRestroTokens.map(async(token)=>{
+            const restro = await Restro.find({restroToken: token});
+            return {restroName: restro ? restro : null}
+        }));
+    
+        if(userBookings.length > 0){
+            res.status(200).json({restroNames});
+        }else{
+            res.status(401).json({message:"User has no table registered"});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({error});
+    }
+})
+
+
+// ends here
+
+
+// api to show restaurants all booked tables
+
+router.post("/allBookedTablesForRestro", async(req, res)=>{
+    try {
+        const restroToken = req.body.restroToken;
+    
+        const bookedTables = await Table.find({restroToken: restroToken});
+
+        const onlyTableNumber = bookedTables.map(table=> table.tableNumber)
+    
+        if(bookedTables){
+            res.status(200).json({onlyTableNumber});
+        }else{
+            res.status(401).json({message:"No tables booked"});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({error});
+    }
+})
+
+
+// ends here
+
+
+// api to unbook a table by restro
+
+router.get("/unbookTablebyRestro/:tableNumber", async (req, res)=>{
+    try {
+        const tableNumber = req.params.tableNumber;
+    
+        const unbookTable = await Table.findOneAndDelete({tableNumber:tableNumber});
+    
+        if(unbookTable){
+            res.status(200).json({message: `Table number ${tableNumber} has been successfully unbooked`});
+        }else{
+            res.status(401).json({message:`Table ${tableNumber} has not been unbooked due to some error`});
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(401).json({error});
+    }
+})
+
+// ends here
 
 module.exports = router;

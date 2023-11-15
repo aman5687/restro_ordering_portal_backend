@@ -12,7 +12,6 @@ const tableSchema = new mongoose.Schema({
     status:{
         type:String,
         required:true,
-        default:"available",
     },
     bookedBy:{
         type:String,
