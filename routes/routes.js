@@ -8,6 +8,7 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 const cloudinary = require("cloudinary").v2;
 const Restro = require("../models/restroInfo");
+const Table = require("../models/tables");
 
 const storage = multer.diskStorage({
     filename: function(req, file, cb){
@@ -271,6 +272,41 @@ router.get("/restroByInfo/:token", async (req, res)=>{
 
 // ends here
 
+
+// api to book tables
+
+router.post("/bookTable/:token/:tableNumber", async (req, res)=>{
+    try {
+        const restroToken = req.params.token
+        const tableNumber = req.params.tableNumber;
+        const status = req.body.status;
+        const bookedBy = req.body.bookedBy;
+    
+        const tableBook = new Table({
+            restroToken,
+            tableNumber,
+            status,
+            bookedBy
+        });
+    
+        const bookedTable = await tableBook.save();
+    
+        if(bookedTable){
+            res.status(200).json({message:"Your table has been successfully booked"});
+        }else{
+            res.status(401).json({message:"Your table has not been booked due to some problems"});
+        }
+    } catch (error) {
+        res.status(401).json({error});
+    };
+
+
+
+
+
+})
+
+// ends here
 
 
 
